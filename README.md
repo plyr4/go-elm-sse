@@ -13,35 +13,44 @@ SSE is a server-to-client communication pattern that involves data streaming ove
 
 ### Run the example
 
+1. Install [Elm](https://guide.elm-lang.org/install/elm.html).
 ```bash
-
-# clone the repo
+$ elm --version
+0.19.1
+```
+2. Install [Go](https://golang.org/doc/install).
+```bash
+$ go version
+go version go1.15.3 darwin/amd64
+```
+3. Clone the repo.
+```bash
 $ git clone git@github.com:davidvader/go-elm-sse.git
 $ cd go-elm-sse
-
-# run Elm app
+```
+4. Run the Elm app.
+```bash
 $ elm-app start
-
-# run Go gin server
+```
+5. Run the Go gin server.
+```bash
 $ cd sse-server
 $ go build sse-server/main.go
 $ ./main
-
 ```
-
-1. Open the Elm app http://localhost:3000.
-2. Click `connect`, Elm executes javascript that will: 
+6. Open the Elm app http://localhost:3000.
+7. Click `connect`, Elm executes javascript that will: 
 - create the `EventSource` using the url `http://localhost:8080/DavidVader/heyvela/builds/2/steps/3/logs/events`
 - create event listener to receive stream data via `message`
-
-3. Upon receiving the `GET` to `http://localhost:8080/DavidVader/heyvela/builds/2/steps/3/logs/events`, the `gin` server will:
+8. Upon receiving the `GET` to `http://localhost:8080/DavidVader/heyvela/builds/2/steps/3/logs/events`, the `gin` server will:
 - [create a Go channel](https://github.com/davidvader/go-elm-sse/blob/master/sse-server/main.go#L44-L47) to send real-time server updates to
 - [create a gin c.Stream](https://github.com/davidvader/go-elm-sse/blob/master/sse-server/main.go#L67-L80) to relay events in the channel to the client's connection
 - [mock real-time updates](https://github.com/davidvader/go-elm-sse/blob/master/sse-server/main.go#L49-L65) to send events to the client in real time
+9. Watch the events stream data into the view.
 
-4. Watch the events stream data into the view.
+### Discussion
 
-### Pros
+#### Pros
 
 - Concept of `SSE` is implemented solely through HTTP, no need for websockets.
 - `EventSource` is implemented natively through Javascript, fitting naturally into Elm ports.
@@ -49,11 +58,25 @@ $ ./main
 - Events are sent from the server to the client, meaning less polling. One streaming connection per open log, per tab.
 - No more refreshing for logs. Allows for real-time server update rendering. Improved UX.
 
-### Cons
+#### Cons
 
-- There exists no native SSE library in `elm/http`, requiring more overhead in Elm through [ports](https://guide.elm-lang.org/interop/ports.html).
-- Requires an extension of the server to accept and maintain incoming stream connections.
-- Open connection maintenance with the load balancer could be complicated.
+- Added complexity. API polling and websockets are far more straight forward and require less code to maintain client-server communication.
+- An Elm native SSE library, nor are there helpers in `elm/http`, requiring more overhead through [ports](https://guide.elm-lang.org/interop/ports.html).
+- Requires added functionality to the server to accept incoming and maintain active stream connections.
+- Maintaining open connections and making it thread safe for the load balancer.
+- `EventSource` appears to be tied directly to `GET` so it relies heavily on the URL and headers to provide UI connection data.
+
+#### Vela-specific concerns 
+
+- Should SSE be integrated into the worker? ie JUST logs
+- Should SSE apply to all resource events? ie SSE on every resource endpoint
+- How can we integrate SSE behind the scenes with better HTTP manipulation?
+
+#### Conclusion
+
+If you can deal with the code overhead and complexity added to the infrastructure, then
+
+SSE > websockets > API polling
 
 ### Resources
 
