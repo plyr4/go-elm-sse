@@ -1,4 +1,4 @@
-module git.target.com/DavidVader/elm-sse/server
+module github.com/davidvader/go-elm-sse/sse-server
 
 go 1.15
 

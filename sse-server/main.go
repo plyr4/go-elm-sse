@@ -12,7 +12,7 @@ import (
 
 // mock log feed
 var logs = []string{
-	`time="2021-01-20T21:11:43Z" level=info msg="Vela Artifactory Plugin" code="https://github.com/go-vela/vela-artifactory" docs="https://go-vela.github.io/docs/plugins/registry/artifactory" registry="https://hub.docker.com/r/target/vela-artifactory"
+	`time="2021-01-20T21:11:43Z" level=info msg="Vela Artifactory Plugin" code="https://github.com/go-vela/vela-artifactory" docs="https://go-vela.github.io/docs/plugins/registry/artifactory" registry="https://hub.docker.com/r/vela-artifactory"
 `,
 	`[Info] [Thread 2] Uploading artifact: source/sample.jar
 `,

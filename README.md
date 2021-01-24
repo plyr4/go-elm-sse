@@ -16,7 +16,7 @@ SSE is a server-to-client communication pattern that involves data streaming ove
 ```bash
 
 # clone the repo
-$ git clone git.target.com/DavidVader/go-elm-sse
+$ git clone git@github.com:davidvader/go-elm-sse.git
 $ cd go-elm-sse
 
 # run Elm app
@@ -35,9 +35,9 @@ $ ./main
 - create event listener to receive stream data via `message`
 
 3. Upon receiving the `GET` to `http://localhost:8080/DavidVader/heyvela/builds/2/steps/3/logs/events`, the `gin` server will:
-- [create a Go channel](https://git.target.com/DavidVader/go-elm-sse/blob/master/sse-server/main.go#L44-L47) to send real-time server updates to
-- [create a gin c.Stream](https://git.target.com/DavidVader/go-elm-sse/blob/master/sse-server/main.go#L67-L80) to relay events in the channel to the client's connection
-- [mock real-time updates](https://git.target.com/DavidVader/go-elm-sse/blob/master/sse-server/main.go#L49-L65) to send events to the client in real time
+- [create a Go channel](https://github.com/davidvader/go-elm-sse/blob/master/sse-server/main.go#L44-L47) to send real-time server updates to
+- [create a gin c.Stream](https://github.com/davidvader/go-elm-sse/blob/master/sse-server/main.go#L67-L80) to relay events in the channel to the client's connection
+- [mock real-time updates](https://github.com/davidvader/go-elm-sse/blob/master/sse-server/main.go#L49-L65) to send events to the client in real time
 
 4. Watch the events stream data into the view.
 
