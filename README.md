@@ -35,7 +35,7 @@ $ elm-app start
 5. Run the Go gin server.
 ```bash
 $ cd sse-server
-$ go build sse-server/main.go
+$ go build main.go
 $ ./main
 ```
 6. Open the Elm app http://localhost:3000.
