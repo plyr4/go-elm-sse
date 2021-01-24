@@ -59,6 +59,5 @@ $ ./main
 
 - [Server Sent Events](https://medium.com/conectric-networks/a-look-at-server-sent-events-54a77f8d6ff7)
 - [gin](https://github.com/gin-gonic/gin)
-- [c.Stream and gin SSE](https://stackoverflow.com/questions/44825244/how-to-write-a-stream-api-using-gin-gonic-server-in-golang-tried-c-stream-didnt)
 - [Elm ports](https://guide.elm-lang.org/interop/ports.html)
 - [EventSource](https://developer.mozilla.org/en-US/docs/Web/API/EventSource)
