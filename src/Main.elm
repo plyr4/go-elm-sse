@@ -16,10 +16,10 @@ type alias Model =
 type alias  SSEConfig = {
         url : String
     } 
-
 sseEndpoint : String
 sseEndpoint =
-    "http://localhost:8080/DavidVader/heyvela/builds/2/steps/3/logs/events"
+    -- "http://localhost:8080/DavidVader/heyvela/builds/2/steps/3/logs/events"
+    "http://localhost:9999/stream"
 
 init : ( Model, Cmd Msg )
 init =
@@ -43,7 +43,7 @@ update msg model =
             ( model, connectSSE <| SSEConfig sseEndpoint )
 
         ReceiveEvent message ->
-            ( { model | data = Just message }, Cmd.none )
+            ( { model | data = Just (Maybe.withDefault "" model.data ++ "\n" ++ message) }, Cmd.none )
 
 
 
@@ -52,10 +52,15 @@ update msg model =
 
 view : Model -> Html Msg
 view model =
+    let
+
+        data = Maybe.withDefault "" model.data
+    in
     div []
-        [ text "sse proof of concept"
+        [ h1 [] [ text "sse proof of concept"]
         , div [] [ button [ onClick ConnectSSE ] [ text "connect" ] ]
-        , p [] [ code [] [text <|  Maybe.withDefault "" model.data] ]
+        , p [][ code [] [text data]]
+
         ]
 
 

@@ -13,6 +13,8 @@ app.ports.connectSSE.subscribe(function (config) {
   // create a new client using configuration URL
   var stream = new EventSource(config.url);
 
+  // catch errors?
+
   // add an event listener to subscribe to incoming events
   stream.addEventListener("message", function (e) {
     app.ports.messageReceiver.send(e.data);

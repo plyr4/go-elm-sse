@@ -12,14 +12,14 @@
 body {
   font-family: 'Source Sans Pro', 'Trebuchet MS', 'Lucida Grande', 'Bitstream Vera Sans', 'Helvetica Neue', sans-serif;
   margin: 0;
-  color: white;
-  background: gray;
   padding: 1rem;
   font-size: 24px;
 }
 
 h1 {
   font-size: 30px;
+  display: inline-block;
+  padding: 0.4rem 0.8rem;
 }
 
 img {
@@ -35,4 +35,5 @@ p {
   color: white;
   font-weight: 300;
   height: 600px;
+  overflow: auto;
 }

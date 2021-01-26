@@ -1,17 +1,22 @@
 package main
 
 import (
+	"bufio"
+	"context"
+	"fmt"
 	"io"
 	"strconv"
 	"time"
 
+	"docker.io/go-docker"
+	"docker.io/go-docker/api/types"
+	"github.com/docker/docker/pkg/stdcopy"
+	"github.com/gin-contrib/sse"
 	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 )
 
 func main() {
-
-	// initialize connections map
-	connections = make(map[string](chan string))
 
 	// create gin server
 	r := gin.Default()
@@ -19,47 +24,101 @@ func main() {
 	// enable CORS
 	r.Use(CORSMiddleware())
 
-	// handler for connecting to an EventSource and streaming data
-	r.GET("/:org/:repo/builds/:build/steps/:step/logs/events", func(c *gin.Context) {
+	r.GET("/stream", func(c *gin.Context) {
 
-		// initialize channel for handling messages
-		stream := make(chan string, 10)
+		// set timeout
+		ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+		defer cancel()
 
-		// mock background event of lo
+		// channels for stream data and done
+		done := make(chan bool)
+
+		// use timeout so connections dont last forever
 		go func() {
-			defer close(stream)
-
-			// mock some growing log output for the demo
-			log := ""
-			for i := 0; i < 5; i++ {
-
-				// line num
-				n := ((strconv.Itoa(i + 1)) + "   "
-
-				// mock a log line and send it to the channel
-				log +=  n + logs[i])
-				stream <- log
-
-				time.Sleep(time.Second * 2)
+			for {
+				select {
+				case <-c.Request.Context().Done():
+					// client is done
+					done <- true
+					return
+				case <-ctx.Done():
+					// timeout
+					switch ctx.Err() {
+					case context.DeadlineExceeded:
+						fmt.Println("timeout")
+					}
+					done <- true
+					return
+				}
 			}
 		}()
 
-		// create a stream for this connection and send events from server to client when
-		//      they are received through the channel
+		client, err := docker.NewEnvClient()
+		if err != nil {
+			return
+		}
+
+		// tail logs
+		logs, err := client.ContainerLogs(ctx, "c216a64c3c5d",
+			types.ContainerLogsOptions{
+				ShowStdout: true, ShowStderr: true, Follow: true, Tail: "3",
+			},
+		)
+		if err != nil {
+			fmt.Println("reader error: ", err.Error())
+			done <- true
+			return
+		}
+
+		// code for copying logs using pipe taken from pkg-runtime
+		// https://github.com/go-vela/pkg-runtime/blob/4591dd61eeb5982bdb8e7a3c87ca2d05aac459bd/runtime/docker/container.go
+
+		// create in-memory pipe for capturing logs
+		rc, wc := io.Pipe()
+
+		// capture all stdout and stderr logs
+		go func() {
+
+			// copy container stdout and stderr logs to our in-memory pipe
+			//
+			// https://godoc.org/github.com/docker/docker/pkg/stdcopy#StdCopy
+			_, err := stdcopy.StdCopy(wc, wc, logs)
+			if err != nil {
+				logrus.Errorf("unable to copy logs for container: %v", err)
+			}
+
+			// close logs buffer
+			logs.Close()
+
+			// close in-memory pipe write closer
+			wc.Close()
+		}()
+
+		// message count
+		count := 0
+
 		c.Stream(func(w io.Writer) bool {
 
-			// listen for events to this stream until the channel is closed
-			for msg := range stream {
-				c.SSEvent("message", msg)
+			scanner := bufio.NewScanner(rc)
+			for scanner.Scan() {
+
+				// send 'message' event to client
+				c.Render(-1, sse.Event{
+					Id:    strconv.Itoa(count),
+					Event: "message",
+					Data:  string(scanner.Bytes()),
+				})
+
+				count++
+
 				return true
 			}
 
-			// done with this stream connection
 			return false
 		})
 	})
 
-	r.Run()
+	r.Run("localhost:9999")
 }
 
 // CORSMiddleware gin middleware for allowing cors
@@ -77,18 +136,4 @@ func CORSMiddleware() gin.HandlerFunc {
 
 		c.Next()
 	}
-}
-
-// mock log feed
-var logs = []string{
-	`time="2021-01-20T21:11:43Z" level=info msg="Vela Artifactory Plugin" code="https://github.com/go-vela/vela-artifactory" docs="https://go-vela.github.io/docs/plugins/registry/artifactory" registry="https://hub.docker.com/r/vela-artifactory"
-`,
-	`[Info] [Thread 2] Uploading artifact: source/sample.jar
-`,
-	`[Error] [Thread 2] Artifactory response: 401 Unauthorized
-`,
-	`[Error] Failed uploading 1 artifacts.
-`,
-	`
-`,
 }
